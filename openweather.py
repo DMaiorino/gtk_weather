@@ -18,18 +18,25 @@ class getWeather():
         #try:
         #    city_id = city_list.get('CityList',city)
         #except:    
-	    url = "http://openweathermap.org/data/2.0/find/name?q="+city+"&units=metric"
+	url = "http://openweathermap.org/data/2.0/find/name?q="+city+"&units=metric"
 
-	    try:
+	try:
 		f = urllib2.urlopen(url)
-	    except:
+	except:
 		print 'Error, unable to access http://openweathermap.org/data/2.0/find/name?q='+city 
+		sys.exit()
+	
+	json_data = f.read()
+	jdata_decoded = json.loads(json_data)
+	
+	#Check if data has been provided
+	try: 
+		count = jdata_decoded['count']
+	except:
+		print "No information could be found for provided city, exiting..."
+		sys.exit()
 
-	    json_data = f.read()
-	    jdata_decoded = json.loads(json_data)
-	    count = jdata_decoded['count']
-
-	    if ( count > 1 ):
+	if ( count > 1 ):
 		print 'More then one site returned, please select from the following:'	
 		counter = 0
 		while (counter < count):
@@ -43,6 +50,12 @@ class getWeather():
 		else:
 			print 'Error: '+str(user_selection)+' not a valid option, exiting...'
 			sys.exit()
+	elif count == 1 :
+		return jdata_decoded['list'][0]['id']
+	else:
+		print "No information found for provided site. Exiting"
+		sys.exit()
+
 
 
     def get_json_data(self,city):
@@ -50,10 +63,9 @@ class getWeather():
         city_id = self.get_city_id(city)
             
 	if args.farenheight:
-		url = "http://openweathermap.org/data/2.0/find/name?q="+city+"&units=imperial"
+		url = "http://openweathermap.org/data/2.0/weather/city/"+str(city_id)+"?type=json&units=imperial"
 	else:
-		url = "http://openweathermap.org/data/2.0/find/name?q="+city+"&units=metric"
-        	#url = "http://openweathermap.org/data/2.0/weather/city/"+str(city_id)+"?type=json"
+		url = "http://openweathermap.org/data/2.0/weather/city/"+str(city_id)+"?type=json&units=metric"
         try:
             f = urllib2.urlopen(url)
         except:
@@ -66,21 +78,21 @@ class getWeather():
         
         json_data = self.get_json_data(city)
         jdata_decoded = json.loads(json_data)
+	print jdata_decoded
         w_data = {}
 
-	w_data['id'] = str(jdata_decoded['list'][0]['id'])
-        w_data['name'] = str(jdata_decoded['list'][0]['name'])
-        w_data['date'] = str(jdata_decoded['list'][0]['date'])
-        w_data['temp'] = str(jdata_decoded['list'][0]['main']['temp'])
-	#print "What"+w_data['temp'] 
-        w_data['pressure'] = str(jdata_decoded['list'][0]['main']['pressure'])
-        w_data['humidity'] = str(jdata_decoded['list'][0]['main']['humidity'])+"%"
-        w_data['wind'] = str(jdata_decoded['list'][0]['wind']['speed'])+" m/s"
-        w_data['clouds'] = str(jdata_decoded['list'][0]['clouds']['all'])+" m/s"
-        w_data['img'] = (jdata_decoded['list'][0]['weather'][0]['icon'])
-        w_data['weather'] = str(jdata_decoded['list'][0]['weather'][0]['main'])
-        
-        w_iconname = w_data['img'] + ".png"
+	w_data['id'] = str(jdata_decoded['id'])
+        w_data['name'] = str(jdata_decoded['name'])
+        w_data['date'] = str(jdata_decoded['date'])
+        w_data['temp'] = str(jdata_decoded['main']['temp'])
+        w_data['pressure'] = str(jdata_decoded['main']['pressure'])
+        w_data['humidity'] = str(jdata_decoded['main']['humidity'])+"%"
+        w_data['wind'] = str(jdata_decoded['wind']['speed'])+" m/s"
+        w_data['clouds'] = str(jdata_decoded['clouds']['all'])+" m/s"
+        w_data['img'] = (jdata_decoded['weather'][0]['icon'])
+        w_data['weather'] = str(jdata_decoded['weather'][0]['main'])
+       
+#        w_iconname = w_data['img'] + ".png"
 
 	#Pull icon name from site        
 #        if not os.path.exists('./images/'+w_iconname):
@@ -90,7 +102,7 @@ class getWeather():
 #            output.write(w_icon)
 #            output.close()
          
-        w_data['img'] = str(w_iconname)
+#        w_data['img'] = str(w_iconname)
         
         return w_data    
     
