@@ -78,7 +78,6 @@ class getWeather():
         
         json_data = self.get_json_data(city)
         jdata_decoded = json.loads(json_data)
-	print jdata_decoded
         w_data = {}
 
 	w_data['id'] = str(jdata_decoded['id'])
