@@ -1,24 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import urllib2
+import argparse
+import ConfigParser
 import json
 import os.path
-import ConfigParser
 import sys
-import argparse
+import urllib2
 
 class getWeather():
 
     def get_city_id(self, city):
     
-        #city_list = ConfigParser.ConfigParser()
-        #city_list.read('./city-id.txt')
-
-        #try:
-        #    city_id = city_list.get('CityList',city)
-        #except:    
+        city_list = ConfigParser.ConfigParser()
 	url = "http://openweathermap.org/data/2.0/find/name?q="+city+"&units=metric"
+	
+	if args.default:
+		city_list.read('./config.ini')
+		try:
+			city_id = city_list.get('default city','city_id')
+		except:
+			print 'Error, unable to load city_id from configuration'
+			sys.exit()
+		return city_id
 
 	try:
 		f = urllib2.urlopen(url)
@@ -91,24 +95,25 @@ class getWeather():
         w_data['img'] = (jdata_decoded['weather'][0]['icon'])
         w_data['weather'] = str(jdata_decoded['weather'][0]['main'])
        
-#        w_iconname = w_data['img'] + ".png"
-
-	#Pull icon name from site        
-#        if not os.path.exists('./images/'+w_iconname):
-#            w_icon = urllib2.urlopen(w_iconname).read()
-#            #w_icon = urllib2.urlopen(w_img).read()
-#            output = open('./images/'+w_iconname,'wb')
-#            output.write(w_icon)
-#            output.close()
-         
-#        w_data['img'] = str(w_iconname)
-        
         return w_data    
+
+    def check_args(self):
+	if args.default and args.city:
+		print 'Error: unable to lookup city when using default option'
+		sys.exit()
+	if not args.city and not args.default:
+		print 'Error: too few arguments'
+		sys.exit()
+
     
     def main(self, city):
         
         weather_data = self.get_weather(city)
-        print 'Weather in '+city+''
+	if args.city:
+		print 'Weather in '+city+''
+	else:
+		print 'Weather in '+city+''
+
 	if args.farenheight:
 		print 'Temperature :',weather_data['temp']+ " F"
 	else:
@@ -126,10 +131,12 @@ if __name__ == "__main__":
 
     #Start option settings#
     parser = argparse.ArgumentParser()
-    parser.add_argument("city", help="Search this city for weather information")
+    parser.add_argument("city", nargs='?', help="Search this city for weather information")
     parser.add_argument("-f","--farenheight", action="store_true", help="Set metics to Farenheight")
     parser.add_argument("-c","--celcius", action="store_true", help="Set metics to Celcius")
+    parser.add_argument("-d","--default", action="store_true", help="Weather for default city")
     args = parser.parse_args()
+    app.check_args()
     #End option settings#
 
     app.main(str(args.city))

@@ -1,0 +1,10 @@
+#!/usr/bin/python
+
+from os.path import expanduser
+from ConfigParser import SafeConfigParser
+
+home = expanduser("~")
+parser = SafeConfigParser()
+parser.read(home+"/.gtk_weather/config.ini")
+
+print parser.get('default city', 'city_id')
